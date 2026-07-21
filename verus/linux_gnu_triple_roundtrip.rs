@@ -25,6 +25,31 @@ pub enum EnvTag {
     GnuIlp32,
 }
 
+pub enum VendorTag {
+    Unknown,
+}
+
+pub enum OsTag {
+    Linux,
+}
+
+pub enum BinaryTag {
+    Elf,
+}
+
+pub enum InputForm {
+    Canonical(LinuxGnuTriple),
+    ExplicitElf(LinuxGnuTriple),
+}
+
+pub struct ParsedTriple {
+    pub arch: ArchTag,
+    pub vendor: VendorTag,
+    pub os: OsTag,
+    pub env: EnvTag,
+    pub binary: BinaryTag,
+}
+
 pub open spec fn arch_of(case: LinuxGnuTriple) -> ArchTag {
     match case {
         LinuxGnuTriple::X86_64Gnu | LinuxGnuTriple::X86_64Gnux32 => ArchTag::X86_64,
@@ -76,6 +101,41 @@ pub open spec fn canonical_bytes(case: LinuxGnuTriple) -> Seq<u8> {
 
 pub open spec fn explicit_elf_bytes(case: LinuxGnuTriple) -> Seq<u8> {
     canonical_bytes(case) + elf_suffix()
+}
+
+pub open spec fn accepted_bytes(input: InputForm) -> Seq<u8> {
+    match input {
+        InputForm::Canonical(case) => canonical_bytes(case),
+        InputForm::ExplicitElf(case) => explicit_elf_bytes(case),
+    }
+}
+
+pub open spec fn parsed(case: LinuxGnuTriple) -> ParsedTriple {
+    ParsedTriple {
+        arch: arch_of(case),
+        vendor: VendorTag::Unknown,
+        os: OsTag::Linux,
+        env: env_of(case),
+        binary: BinaryTag::Elf,
+    }
+}
+
+pub open spec fn parse_bytes_form(input: InputForm) -> ParsedTriple {
+    match input {
+        InputForm::Canonical(case) | InputForm::ExplicitElf(case) => parsed(case),
+    }
+}
+
+pub open spec fn display_model(triple: ParsedTriple) -> Option<Seq<u8>> {
+    match triple {
+        ParsedTriple { arch: ArchTag::X86_64, vendor: VendorTag::Unknown, os: OsTag::Linux, env: EnvTag::Gnu, binary: BinaryTag::Elf } => Option::Some(canonical_bytes(LinuxGnuTriple::X86_64Gnu)),
+        ParsedTriple { arch: ArchTag::X86_64, vendor: VendorTag::Unknown, os: OsTag::Linux, env: EnvTag::Gnux32, binary: BinaryTag::Elf } => Option::Some(canonical_bytes(LinuxGnuTriple::X86_64Gnux32)),
+        ParsedTriple { arch: ArchTag::Aarch64, vendor: VendorTag::Unknown, os: OsTag::Linux, env: EnvTag::Gnu, binary: BinaryTag::Elf } => Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64Gnu)),
+        ParsedTriple { arch: ArchTag::Aarch64, vendor: VendorTag::Unknown, os: OsTag::Linux, env: EnvTag::GnuIlp32, binary: BinaryTag::Elf } => Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64GnuIlp32)),
+        ParsedTriple { arch: ArchTag::Aarch64Be, vendor: VendorTag::Unknown, os: OsTag::Linux, env: EnvTag::Gnu, binary: BinaryTag::Elf } => Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64BeGnu)),
+        ParsedTriple { arch: ArchTag::Aarch64Be, vendor: VendorTag::Unknown, os: OsTag::Linux, env: EnvTag::GnuIlp32, binary: BinaryTag::Elf } => Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64BeGnuIlp32)),
+        _ => Option::None,
+    }
 }
 
 pub proof fn canonical_table()
@@ -175,6 +235,137 @@ pub proof fn field_table()
     assert(env_of(LinuxGnuTriple::Aarch64GnuIlp32) == EnvTag::GnuIlp32);
     assert(env_of(LinuxGnuTriple::Aarch64BeGnu) == EnvTag::Gnu);
     assert(env_of(LinuxGnuTriple::Aarch64BeGnuIlp32) == EnvTag::GnuIlp32);
+}
+
+pub proof fn parsed_value_table()
+    ensures
+        parsed(LinuxGnuTriple::X86_64Gnu)
+            == (ParsedTriple { arch: ArchTag::X86_64, vendor: VendorTag::Unknown, os: OsTag::Linux, env: EnvTag::Gnu, binary: BinaryTag::Elf }),
+        parsed(LinuxGnuTriple::X86_64Gnux32)
+            == (ParsedTriple { arch: ArchTag::X86_64, vendor: VendorTag::Unknown, os: OsTag::Linux, env: EnvTag::Gnux32, binary: BinaryTag::Elf }),
+        parsed(LinuxGnuTriple::Aarch64Gnu)
+            == (ParsedTriple { arch: ArchTag::Aarch64, vendor: VendorTag::Unknown, os: OsTag::Linux, env: EnvTag::Gnu, binary: BinaryTag::Elf }),
+        parsed(LinuxGnuTriple::Aarch64GnuIlp32)
+            == (ParsedTriple { arch: ArchTag::Aarch64, vendor: VendorTag::Unknown, os: OsTag::Linux, env: EnvTag::GnuIlp32, binary: BinaryTag::Elf }),
+        parsed(LinuxGnuTriple::Aarch64BeGnu)
+            == (ParsedTriple { arch: ArchTag::Aarch64Be, vendor: VendorTag::Unknown, os: OsTag::Linux, env: EnvTag::Gnu, binary: BinaryTag::Elf }),
+        parsed(LinuxGnuTriple::Aarch64BeGnuIlp32)
+            == (ParsedTriple { arch: ArchTag::Aarch64Be, vendor: VendorTag::Unknown, os: OsTag::Linux, env: EnvTag::GnuIlp32, binary: BinaryTag::Elf }),
+{
+    assert(parsed(LinuxGnuTriple::X86_64Gnu)
+        == ParsedTriple { arch: ArchTag::X86_64, vendor: VendorTag::Unknown, os: OsTag::Linux, env: EnvTag::Gnu, binary: BinaryTag::Elf });
+    assert(parsed(LinuxGnuTriple::X86_64Gnux32)
+        == ParsedTriple { arch: ArchTag::X86_64, vendor: VendorTag::Unknown, os: OsTag::Linux, env: EnvTag::Gnux32, binary: BinaryTag::Elf });
+    assert(parsed(LinuxGnuTriple::Aarch64Gnu)
+        == ParsedTriple { arch: ArchTag::Aarch64, vendor: VendorTag::Unknown, os: OsTag::Linux, env: EnvTag::Gnu, binary: BinaryTag::Elf });
+    assert(parsed(LinuxGnuTriple::Aarch64GnuIlp32)
+        == ParsedTriple { arch: ArchTag::Aarch64, vendor: VendorTag::Unknown, os: OsTag::Linux, env: EnvTag::GnuIlp32, binary: BinaryTag::Elf });
+    assert(parsed(LinuxGnuTriple::Aarch64BeGnu)
+        == ParsedTriple { arch: ArchTag::Aarch64Be, vendor: VendorTag::Unknown, os: OsTag::Linux, env: EnvTag::Gnu, binary: BinaryTag::Elf });
+    assert(parsed(LinuxGnuTriple::Aarch64BeGnuIlp32)
+        == ParsedTriple { arch: ArchTag::Aarch64Be, vendor: VendorTag::Unknown, os: OsTag::Linux, env: EnvTag::GnuIlp32, binary: BinaryTag::Elf });
+}
+
+pub proof fn parse_display_cases()
+    ensures
+        parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::X86_64Gnu))
+            == parsed(LinuxGnuTriple::X86_64Gnu),
+        parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnu))
+            == parsed(LinuxGnuTriple::X86_64Gnu),
+        parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::X86_64Gnux32))
+            == parsed(LinuxGnuTriple::X86_64Gnux32),
+        parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnux32))
+            == parsed(LinuxGnuTriple::X86_64Gnux32),
+        parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64Gnu))
+            == parsed(LinuxGnuTriple::Aarch64Gnu),
+        parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64Gnu))
+            == parsed(LinuxGnuTriple::Aarch64Gnu),
+        parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64GnuIlp32))
+            == parsed(LinuxGnuTriple::Aarch64GnuIlp32),
+        parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64GnuIlp32))
+            == parsed(LinuxGnuTriple::Aarch64GnuIlp32),
+        parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnu))
+            == parsed(LinuxGnuTriple::Aarch64BeGnu),
+        parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64BeGnu))
+            == parsed(LinuxGnuTriple::Aarch64BeGnu),
+        parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnuIlp32))
+            == parsed(LinuxGnuTriple::Aarch64BeGnuIlp32),
+        parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64BeGnuIlp32))
+            == parsed(LinuxGnuTriple::Aarch64BeGnuIlp32),
+        display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::X86_64Gnu)))
+            == Option::Some(canonical_bytes(LinuxGnuTriple::X86_64Gnu)),
+        display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnu)))
+            == Option::Some(canonical_bytes(LinuxGnuTriple::X86_64Gnu)),
+        display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::X86_64Gnux32)))
+            == Option::Some(canonical_bytes(LinuxGnuTriple::X86_64Gnux32)),
+        display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnux32)))
+            == Option::Some(canonical_bytes(LinuxGnuTriple::X86_64Gnux32)),
+        display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64Gnu)))
+            == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64Gnu)),
+        display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64Gnu)))
+            == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64Gnu)),
+        display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64GnuIlp32)))
+            == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64GnuIlp32)),
+        display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64GnuIlp32)))
+            == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64GnuIlp32)),
+        display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnu)))
+            == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64BeGnu)),
+        display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64BeGnu)))
+            == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64BeGnu)),
+        display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnuIlp32)))
+            == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64BeGnuIlp32)),
+        display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64BeGnuIlp32)))
+            == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64BeGnuIlp32)),
+{
+    assert(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::X86_64Gnu))
+        == parsed(LinuxGnuTriple::X86_64Gnu));
+    assert(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnu))
+        == parsed(LinuxGnuTriple::X86_64Gnu));
+    assert(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::X86_64Gnux32))
+        == parsed(LinuxGnuTriple::X86_64Gnux32));
+    assert(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnux32))
+        == parsed(LinuxGnuTriple::X86_64Gnux32));
+    assert(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64Gnu))
+        == parsed(LinuxGnuTriple::Aarch64Gnu));
+    assert(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64Gnu))
+        == parsed(LinuxGnuTriple::Aarch64Gnu));
+    assert(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64GnuIlp32))
+        == parsed(LinuxGnuTriple::Aarch64GnuIlp32));
+    assert(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64GnuIlp32))
+        == parsed(LinuxGnuTriple::Aarch64GnuIlp32));
+    assert(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnu))
+        == parsed(LinuxGnuTriple::Aarch64BeGnu));
+    assert(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64BeGnu))
+        == parsed(LinuxGnuTriple::Aarch64BeGnu));
+    assert(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnuIlp32))
+        == parsed(LinuxGnuTriple::Aarch64BeGnuIlp32));
+    assert(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64BeGnuIlp32))
+        == parsed(LinuxGnuTriple::Aarch64BeGnuIlp32));
+
+    assert(display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::X86_64Gnu)))
+        == Option::Some(canonical_bytes(LinuxGnuTriple::X86_64Gnu)));
+    assert(display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnu)))
+        == Option::Some(canonical_bytes(LinuxGnuTriple::X86_64Gnu)));
+    assert(display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::X86_64Gnux32)))
+        == Option::Some(canonical_bytes(LinuxGnuTriple::X86_64Gnux32)));
+    assert(display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnux32)))
+        == Option::Some(canonical_bytes(LinuxGnuTriple::X86_64Gnux32)));
+    assert(display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64Gnu)))
+        == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64Gnu)));
+    assert(display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64Gnu)))
+        == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64Gnu)));
+    assert(display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64GnuIlp32)))
+        == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64GnuIlp32)));
+    assert(display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64GnuIlp32)))
+        == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64GnuIlp32)));
+    assert(display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnu)))
+        == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64BeGnu)));
+    assert(display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64BeGnu)))
+        == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64BeGnu)));
+    assert(display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnuIlp32)))
+        == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64BeGnuIlp32)));
+    assert(display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64BeGnuIlp32)))
+        == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64BeGnuIlp32)));
 }
 
 } // verus!
