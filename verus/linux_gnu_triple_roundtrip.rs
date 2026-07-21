@@ -126,6 +126,76 @@ pub open spec fn parse_bytes_form(input: InputForm) -> ParsedTriple {
     }
 }
 
+pub open spec fn parse_bytes(input: Seq<u8>) -> Option<ParsedTriple> {
+    if input.len() == 24nat {
+        if input == accepted_bytes(InputForm::Canonical(LinuxGnuTriple::X86_64Gnu)) {
+            Option::Some(parsed(LinuxGnuTriple::X86_64Gnu))
+        } else {
+            Option::None
+        }
+    } else if input.len() == 25nat {
+        if input == accepted_bytes(InputForm::Canonical(LinuxGnuTriple::Aarch64Gnu)) {
+            Option::Some(parsed(LinuxGnuTriple::Aarch64Gnu))
+        } else {
+            Option::None
+        }
+    } else if input.len() == 27nat {
+        if input == accepted_bytes(InputForm::Canonical(LinuxGnuTriple::X86_64Gnux32)) {
+            Option::Some(parsed(LinuxGnuTriple::X86_64Gnux32))
+        } else {
+            Option::None
+        }
+    } else if input.len() == 28nat {
+        if input == accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnu)) {
+            Option::Some(parsed(LinuxGnuTriple::X86_64Gnu))
+        } else if input == accepted_bytes(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnu)) {
+            Option::Some(parsed(LinuxGnuTriple::Aarch64BeGnu))
+        } else {
+            Option::None
+        }
+    } else if input.len() == 29nat {
+        if input == accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64Gnu)) {
+            Option::Some(parsed(LinuxGnuTriple::Aarch64Gnu))
+        } else {
+            Option::None
+        }
+    } else if input.len() == 31nat {
+        if input == accepted_bytes(InputForm::Canonical(LinuxGnuTriple::Aarch64GnuIlp32)) {
+            Option::Some(parsed(LinuxGnuTriple::Aarch64GnuIlp32))
+        } else if input == accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnux32)) {
+            Option::Some(parsed(LinuxGnuTriple::X86_64Gnux32))
+        } else {
+            Option::None
+        }
+    } else if input.len() == 32nat {
+        if input == accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64BeGnu)) {
+            Option::Some(parsed(LinuxGnuTriple::Aarch64BeGnu))
+        } else {
+            Option::None
+        }
+    } else if input.len() == 34nat {
+        if input == accepted_bytes(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnuIlp32)) {
+            Option::Some(parsed(LinuxGnuTriple::Aarch64BeGnuIlp32))
+        } else {
+            Option::None
+        }
+    } else if input.len() == 35nat {
+        if input == accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64GnuIlp32)) {
+            Option::Some(parsed(LinuxGnuTriple::Aarch64GnuIlp32))
+        } else {
+            Option::None
+        }
+    } else if input.len() == 38nat {
+        if input == accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64BeGnuIlp32)) {
+            Option::Some(parsed(LinuxGnuTriple::Aarch64BeGnuIlp32))
+        } else {
+            Option::None
+        }
+    } else {
+        Option::None
+    }
+}
+
 pub open spec fn display_model(triple: ParsedTriple) -> Option<Seq<u8>> {
     match triple {
         ParsedTriple { arch: ArchTag::X86_64, vendor: VendorTag::Unknown, os: OsTag::Linux, env: EnvTag::Gnu, binary: BinaryTag::Elf } => Option::Some(canonical_bytes(LinuxGnuTriple::X86_64Gnu)),
@@ -268,103 +338,127 @@ pub proof fn parsed_value_table()
 
 pub proof fn parse_display_cases()
     ensures
-        parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::X86_64Gnu))
-            == parsed(LinuxGnuTriple::X86_64Gnu),
-        parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnu))
-            == parsed(LinuxGnuTriple::X86_64Gnu),
-        parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::X86_64Gnux32))
-            == parsed(LinuxGnuTriple::X86_64Gnux32),
-        parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnux32))
-            == parsed(LinuxGnuTriple::X86_64Gnux32),
-        parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64Gnu))
-            == parsed(LinuxGnuTriple::Aarch64Gnu),
-        parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64Gnu))
-            == parsed(LinuxGnuTriple::Aarch64Gnu),
-        parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64GnuIlp32))
-            == parsed(LinuxGnuTriple::Aarch64GnuIlp32),
-        parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64GnuIlp32))
-            == parsed(LinuxGnuTriple::Aarch64GnuIlp32),
-        parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnu))
-            == parsed(LinuxGnuTriple::Aarch64BeGnu),
-        parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64BeGnu))
-            == parsed(LinuxGnuTriple::Aarch64BeGnu),
-        parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnuIlp32))
-            == parsed(LinuxGnuTriple::Aarch64BeGnuIlp32),
-        parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64BeGnuIlp32))
-            == parsed(LinuxGnuTriple::Aarch64BeGnuIlp32),
-        display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::X86_64Gnu)))
+        parse_bytes(accepted_bytes(InputForm::Canonical(LinuxGnuTriple::X86_64Gnu)))
+            == Option::Some(parsed(LinuxGnuTriple::X86_64Gnu)),
+        parse_bytes(accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnu)))
+            == Option::Some(parsed(LinuxGnuTriple::X86_64Gnu)),
+        parse_bytes(accepted_bytes(InputForm::Canonical(LinuxGnuTriple::X86_64Gnux32)))
+            == Option::Some(parsed(LinuxGnuTriple::X86_64Gnux32)),
+        parse_bytes(accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnux32)))
+            == Option::Some(parsed(LinuxGnuTriple::X86_64Gnux32)),
+        parse_bytes(accepted_bytes(InputForm::Canonical(LinuxGnuTriple::Aarch64Gnu)))
+            == Option::Some(parsed(LinuxGnuTriple::Aarch64Gnu)),
+        parse_bytes(accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64Gnu)))
+            == Option::Some(parsed(LinuxGnuTriple::Aarch64Gnu)),
+        parse_bytes(accepted_bytes(InputForm::Canonical(LinuxGnuTriple::Aarch64GnuIlp32)))
+            == Option::Some(parsed(LinuxGnuTriple::Aarch64GnuIlp32)),
+        parse_bytes(accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64GnuIlp32)))
+            == Option::Some(parsed(LinuxGnuTriple::Aarch64GnuIlp32)),
+        parse_bytes(accepted_bytes(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnu)))
+            == Option::Some(parsed(LinuxGnuTriple::Aarch64BeGnu)),
+        parse_bytes(accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64BeGnu)))
+            == Option::Some(parsed(LinuxGnuTriple::Aarch64BeGnu)),
+        parse_bytes(accepted_bytes(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnuIlp32)))
+            == Option::Some(parsed(LinuxGnuTriple::Aarch64BeGnuIlp32)),
+        parse_bytes(accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64BeGnuIlp32)))
+            == Option::Some(parsed(LinuxGnuTriple::Aarch64BeGnuIlp32)),
+        display_model(parsed(LinuxGnuTriple::X86_64Gnu))
             == Option::Some(canonical_bytes(LinuxGnuTriple::X86_64Gnu)),
-        display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnu)))
+        display_model(parsed(LinuxGnuTriple::X86_64Gnu))
             == Option::Some(canonical_bytes(LinuxGnuTriple::X86_64Gnu)),
-        display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::X86_64Gnux32)))
+        display_model(parsed(LinuxGnuTriple::X86_64Gnux32))
             == Option::Some(canonical_bytes(LinuxGnuTriple::X86_64Gnux32)),
-        display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnux32)))
+        display_model(parsed(LinuxGnuTriple::X86_64Gnux32))
             == Option::Some(canonical_bytes(LinuxGnuTriple::X86_64Gnux32)),
-        display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64Gnu)))
+        display_model(parsed(LinuxGnuTriple::Aarch64Gnu))
             == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64Gnu)),
-        display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64Gnu)))
+        display_model(parsed(LinuxGnuTriple::Aarch64Gnu))
             == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64Gnu)),
-        display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64GnuIlp32)))
+        display_model(parsed(LinuxGnuTriple::Aarch64GnuIlp32))
             == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64GnuIlp32)),
-        display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64GnuIlp32)))
+        display_model(parsed(LinuxGnuTriple::Aarch64GnuIlp32))
             == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64GnuIlp32)),
-        display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnu)))
+        display_model(parsed(LinuxGnuTriple::Aarch64BeGnu))
             == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64BeGnu)),
-        display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64BeGnu)))
+        display_model(parsed(LinuxGnuTriple::Aarch64BeGnu))
             == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64BeGnu)),
-        display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnuIlp32)))
+        display_model(parsed(LinuxGnuTriple::Aarch64BeGnuIlp32))
             == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64BeGnuIlp32)),
-        display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64BeGnuIlp32)))
+        display_model(parsed(LinuxGnuTriple::Aarch64BeGnuIlp32))
             == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64BeGnuIlp32)),
 {
-    assert(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::X86_64Gnu))
-        == parsed(LinuxGnuTriple::X86_64Gnu));
-    assert(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnu))
-        == parsed(LinuxGnuTriple::X86_64Gnu));
-    assert(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::X86_64Gnux32))
-        == parsed(LinuxGnuTriple::X86_64Gnux32));
-    assert(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnux32))
-        == parsed(LinuxGnuTriple::X86_64Gnux32));
-    assert(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64Gnu))
-        == parsed(LinuxGnuTriple::Aarch64Gnu));
-    assert(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64Gnu))
-        == parsed(LinuxGnuTriple::Aarch64Gnu));
-    assert(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64GnuIlp32))
-        == parsed(LinuxGnuTriple::Aarch64GnuIlp32));
-    assert(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64GnuIlp32))
-        == parsed(LinuxGnuTriple::Aarch64GnuIlp32));
-    assert(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnu))
-        == parsed(LinuxGnuTriple::Aarch64BeGnu));
-    assert(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64BeGnu))
-        == parsed(LinuxGnuTriple::Aarch64BeGnu));
-    assert(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnuIlp32))
-        == parsed(LinuxGnuTriple::Aarch64BeGnuIlp32));
-    assert(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64BeGnuIlp32))
-        == parsed(LinuxGnuTriple::Aarch64BeGnuIlp32));
+    assert(parse_bytes(accepted_bytes(InputForm::Canonical(LinuxGnuTriple::X86_64Gnu)))
+        == Option::Some(parsed(LinuxGnuTriple::X86_64Gnu)));
+    assert(parse_bytes(accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnu)))
+        == Option::Some(parsed(LinuxGnuTriple::X86_64Gnu)));
+    assert(parse_bytes(accepted_bytes(InputForm::Canonical(LinuxGnuTriple::X86_64Gnux32)))
+        == Option::Some(parsed(LinuxGnuTriple::X86_64Gnux32)));
+    assert(accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnux32))
+        != accepted_bytes(InputForm::Canonical(LinuxGnuTriple::X86_64Gnu)));
+    assert(accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnux32))
+        != accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnu)));
+    assert(accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnux32))
+        != accepted_bytes(InputForm::Canonical(LinuxGnuTriple::X86_64Gnux32)));
+    assert(accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnux32))[0] == 120u8);
+    assert(accepted_bytes(InputForm::Canonical(LinuxGnuTriple::Aarch64GnuIlp32))[0] == 97u8);
+    assert(accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnux32))
+        != accepted_bytes(InputForm::Canonical(LinuxGnuTriple::Aarch64GnuIlp32)));
+    assert(parse_bytes(accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnux32)))
+        == Option::Some(parsed(LinuxGnuTriple::X86_64Gnux32)));
+    assert(parse_bytes(accepted_bytes(InputForm::Canonical(LinuxGnuTriple::Aarch64Gnu)))
+        == Option::Some(parsed(LinuxGnuTriple::Aarch64Gnu)));
+    assert(accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64Gnu))
+        != accepted_bytes(InputForm::Canonical(LinuxGnuTriple::X86_64Gnu)));
+    assert(accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64Gnu))
+        != accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnu)));
+    assert(accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64Gnu))
+        != accepted_bytes(InputForm::Canonical(LinuxGnuTriple::X86_64Gnux32)));
+    assert(accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64Gnu))
+        != accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnux32)));
+    assert(accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64Gnu))
+        != accepted_bytes(InputForm::Canonical(LinuxGnuTriple::Aarch64Gnu)));
+    assert(parse_bytes(accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64Gnu)))
+        == Option::Some(parsed(LinuxGnuTriple::Aarch64Gnu)));
+    assert(parse_bytes(accepted_bytes(InputForm::Canonical(LinuxGnuTriple::Aarch64GnuIlp32)))
+        == Option::Some(parsed(LinuxGnuTriple::Aarch64GnuIlp32)));
+    assert(parse_bytes(accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64GnuIlp32)))
+        == Option::Some(parsed(LinuxGnuTriple::Aarch64GnuIlp32)));
+    assert(accepted_bytes(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnu))[0] == 97u8);
+    assert(accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnu))[0] == 120u8);
+    assert(accepted_bytes(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnu))
+        != accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnu)));
+    assert(parse_bytes(accepted_bytes(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnu)))
+        == Option::Some(parsed(LinuxGnuTriple::Aarch64BeGnu)));
+    assert(parse_bytes(accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64BeGnu)))
+        == Option::Some(parsed(LinuxGnuTriple::Aarch64BeGnu)));
+    assert(parse_bytes(accepted_bytes(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnuIlp32)))
+        == Option::Some(parsed(LinuxGnuTriple::Aarch64BeGnuIlp32)));
+    assert(parse_bytes(accepted_bytes(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64BeGnuIlp32)))
+        == Option::Some(parsed(LinuxGnuTriple::Aarch64BeGnuIlp32)));
 
-    assert(display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::X86_64Gnu)))
+    assert(display_model(parsed(LinuxGnuTriple::X86_64Gnu))
         == Option::Some(canonical_bytes(LinuxGnuTriple::X86_64Gnu)));
-    assert(display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnu)))
+    assert(display_model(parsed(LinuxGnuTriple::X86_64Gnu))
         == Option::Some(canonical_bytes(LinuxGnuTriple::X86_64Gnu)));
-    assert(display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::X86_64Gnux32)))
+    assert(display_model(parsed(LinuxGnuTriple::X86_64Gnux32))
         == Option::Some(canonical_bytes(LinuxGnuTriple::X86_64Gnux32)));
-    assert(display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::X86_64Gnux32)))
+    assert(display_model(parsed(LinuxGnuTriple::X86_64Gnux32))
         == Option::Some(canonical_bytes(LinuxGnuTriple::X86_64Gnux32)));
-    assert(display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64Gnu)))
+    assert(display_model(parsed(LinuxGnuTriple::Aarch64Gnu))
         == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64Gnu)));
-    assert(display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64Gnu)))
+    assert(display_model(parsed(LinuxGnuTriple::Aarch64Gnu))
         == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64Gnu)));
-    assert(display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64GnuIlp32)))
+    assert(display_model(parsed(LinuxGnuTriple::Aarch64GnuIlp32))
         == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64GnuIlp32)));
-    assert(display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64GnuIlp32)))
+    assert(display_model(parsed(LinuxGnuTriple::Aarch64GnuIlp32))
         == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64GnuIlp32)));
-    assert(display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnu)))
+    assert(display_model(parsed(LinuxGnuTriple::Aarch64BeGnu))
         == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64BeGnu)));
-    assert(display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64BeGnu)))
+    assert(display_model(parsed(LinuxGnuTriple::Aarch64BeGnu))
         == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64BeGnu)));
-    assert(display_model(parse_bytes_form(InputForm::Canonical(LinuxGnuTriple::Aarch64BeGnuIlp32)))
+    assert(display_model(parsed(LinuxGnuTriple::Aarch64BeGnuIlp32))
         == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64BeGnuIlp32)));
-    assert(display_model(parse_bytes_form(InputForm::ExplicitElf(LinuxGnuTriple::Aarch64BeGnuIlp32)))
+    assert(display_model(parsed(LinuxGnuTriple::Aarch64BeGnuIlp32))
         == Option::Some(canonical_bytes(LinuxGnuTriple::Aarch64BeGnuIlp32)));
 }
 
